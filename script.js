@@ -28,7 +28,7 @@ function createMovieCard(movie) {
         <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 cursor-pointer" data-movie-id="${movie.id}" data-media-type="${movie.media_type || 'movie'}">
             <img src="${posterPath}" alt="${title}" class="w-full h-72 object-cover">
             <div class="p-4">
-                <h3 class="text-lg font-semibold truncate">${title}</h3>
+                <h3 class="text-lg font-semibold truncate hover:text-red-500">${title}</h3>
                 <p class="text-sm text-gray-400 mt-2">Rating: ${voteAverage} / 10</p>
             </div>
         </div>
@@ -65,6 +65,52 @@ async function loadInitialContent() {
         }
     }
 }
+
+// Search functionality
+const searchInput = document.getElementById('search-input');
+let searchTimeout;
+
+searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout); // Clear previous timeout
+    const query = e.target.value.trim();
+
+    searchTimeout = setTimeout(async () => {
+        if (query.length > 2) { // Only search if query is at least 3 characters
+            const searchResults = await fetchMovies(`/search/multi?query=${encodeURIComponent(query)}`);
+            // We'll need a new section to display search results.
+            // For now, let's just display them in the trending grid as a placeholder
+            // In a real app, you'd likely hide other sections and show a dedicated search results section.
+
+            // Let's create a dedicated search results section in HTML first:
+            // <section id="search-results-section" class="mb-8 hidden">
+            //     <h2 class="text-3xl font-bold mb-6">Search Results</h2>
+            //     <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            //         //     </div>
+            // </section>
+
+            const trendingSection = document.getElementById('trending-movies-grid'); // Temporarily use this
+            const popularSection = document.getElementById('popular-movies-grid'); // Temporarily use this
+
+            // Hide other sections if search results are present
+            if (query.length > 0) {
+                trendingSection.innerHTML = ''; // Clear trending
+                popularSection.innerHTML = ''; // Clear popular
+                displayMovies(searchResults, 'trending-movies-grid'); // Display search results here
+                // If you added the dedicated search results section:
+                // document.getElementById('search-results-section').classList.remove('hidden');
+                // displayMovies(searchResults, 'search-results-grid');
+            } else {
+                // If search query is empty, reload initial content
+                loadInitialContent();
+                // If you added the dedicated search results section:
+                // document.getElementById('search-results-section').classList.add('hidden');
+            }
+        } else if (query.length === 0) {
+             // If search input is cleared, reload initial content
+             loadInitialContent();
+        }
+    }, 500); // Debounce time: 500ms
+});
 
 
 document.addEventListener('DOMContentLoaded', loadInitialContent);
